@@ -181,7 +181,7 @@ var blob;
 var previewImage = ref(null);
 
 const dbName = "IndexDBAxe";
-const tableName = "user_company";
+const tableName = "tableName";
 const addedData = ref(null);
 const updatedData = ref(null);
 let isModalAdd = ref(false);
@@ -205,6 +205,7 @@ function handleCloseCamera() {
 // SUBMIT DATA
 async function addData() {
    const request = indexedDB.open(dbName, 2);
+
    request.onerror = (event) => {
       console.error("Error opening database:", event.target.error);
    };
@@ -212,19 +213,31 @@ async function addData() {
    request.onupgradeneeded = (event) => {
       const db = event.target.result;
       const objectStore = db.createObjectStore(tableName, { keyPath: "id" });
+      // objectStore.createIndex("title", "title", { unique: false });
    };
 
    request.onsuccess = (event) => {
       const db = event.target.result;
+
+      // Check if the object store exists
+      if (!db.objectStoreNames.contains(tableName)) {
+         console.error("Object store does not exist:", tableName);
+         db.close();
+         return;
+      }
+
       const addTransaction = db.transaction(tableName, "readwrite");
       const receipeObjectStore = addTransaction.objectStore(tableName);
+
       const receipeCount = receipeObjectStore.count();
+
       receipeCount.onsuccess = function (e) {
-         var recordCount = e.target.result;
+         const recordCount = e.target.result;
          const currentTime = new Date();
-         // const fullTime = currentTime.toLocaleTimeString();
          const receipeToAdd = { id: currentTime, title: titleInput.value, description: descriptionInput.value, image: blob };
+
          const addRequest = receipeObjectStore.add(receipeToAdd);
+
          addRequest.onsuccess = (event) => {
             console.log("Data added successfully");
             addedData.value = "Yes";
@@ -253,8 +266,12 @@ async function readData() {
    receipe.value = [];
    const request = indexedDB.open(dbName, 2);
 
-   request.onerror = (event) => {
-      console.error("Error opening database:", event.target.error);
+   request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+
+      if (!db.objectStoreNames.contains(tableName)) {
+         db.createObjectStore(tableName, { keyPath: "id" });
+      }
    };
 
    request.onsuccess = (event) => {
@@ -277,9 +294,13 @@ async function readData() {
          }
       };
 
-      console.log(receipe);
+      readTransaction.onerror = (event) => {
+         console.error("Error opening transaction:", event.target.error);
+         db.close();
+      };
+
       receipeCursor.onerror = (event) => {
-         console.error("Error reading data", event.target.error);
+         console.error("Error opening cursor:", event.target.error);
          db.close();
       };
    };
@@ -444,8 +465,7 @@ async function deleteData(itemId) {
 //   }
 // }
 // Call fetchData when the component is mounted
-readData();
-onMounted();
+// onMounted(readData);
 </script>
 
 <style scoped>
