@@ -93,17 +93,7 @@
             <ComponentCard :imageUrl="item.image" :item="item" :idx="index+1"/>
             <div>
               <v-btn icon="fa-solid fa-trash" size="small" @click="deleteData(item.id)"></v-btn>
-              <!-- <button style="margin-right: 10px" v-on:click="deleteData(item.id)">Delete Data</button> -->
               <v-btn icon="fa-solid fa-pencil" size="small" @click="updateDataChanges(item)"></v-btn>
-              <!-- <button
-                  style="margin-right: 10px"
-                  v-on:click="
-                     () => {
-                        updateDataChanges(item);
-                     }
-                  ">
-                  Update Data
-              </button> -->
             </div>
          </div>
       </div>
@@ -118,7 +108,7 @@ import ComponentCard from "./shared/ContentCard.vue";
 import { useDatabaseList } from 'vuefire'
 import { getDatabase, set, ref as dbRef, remove as dbRemove } from "firebase/database";
 import { useDevicesList, useUserMedia } from "@vueuse/core";
-import { getStorage, ref as storageRef, uploadBytes } from 'firebase/storage';
+import { getStorage, ref as storageRef, uploadBytes,getDownloadURL } from 'firebase/storage';
 
 const firebaseDB = 'todos/';
 const db = getDatabase();
@@ -126,9 +116,9 @@ const todosRef = dbRef(db, firebaseDB);
 const todos = useDatabaseList(todosRef);
 
 function writeToIndexDB(dataUser){
-         fetch(dataUser.image)
-         .then(response => response.blob())
-         .then(blob => {
+         // fetch(dataUser.image)
+         // .then(response => response.blob())
+         // .then(blob => {
             const request = indexedDB.open(dbName, 2);
     request.onerror = (event) => {
       console.error("Error opening database:", event.target.error);
@@ -150,7 +140,7 @@ function writeToIndexDB(dataUser){
       const receipeCount = receipeObjectStore.count();
     
          receipeCount.onsuccess = function (e) {
-                  const receipeToAdd = { id: dataUser.id, title: dataUser.title, description: dataUser.description, image: blob };
+                  const receipeToAdd = { id: dataUser.id, title: dataUser.title, description: dataUser.description, image: dataUser.image };
                   console.log('receipeToAdd',receipeToAdd)
                      const addRequest = receipeObjectStore.add(receipeToAdd);
                      addRequest.onsuccess = (event) => {
@@ -171,10 +161,10 @@ function writeToIndexDB(dataUser){
             };
    
     };
-         })
-         .catch(error => {
-            console.error('Error fetching blob:', error);
-         });
+         // })
+         // .catch(error => {
+         //    console.error('Error fetching blob:', error);
+         // });
 
 }
 
@@ -189,16 +179,8 @@ watchEffect(() => {
    }
 });
 
-// function uploadImage(image){
-//    const storage = getStorage();
-//         const storageRef = storageRef(storage, 'images/' + image.name);
-//         // Upload the file
-//    uploadBytes(storageRef, image);
-//    console.log('Image uploaded successfully!');
-// }
-
 function writeUserData(eventData ) {
-   const receipeToAdd = { id: eventData.id, title: eventData.title, description: eventData.description, image: URL.createObjectURL(eventData.image)  };
+   const receipeToAdd = { id: eventData.id, title: eventData.title, description: eventData.description, image: eventData.image  };
    const db = getDatabase();
    console.log('resep',receipeToAdd)
    set(dbRef(db, firebaseDB + eventData.id),receipeToAdd);
@@ -221,24 +203,27 @@ const { stream, enabled } = useUserMedia({
    constraints: { video: { deviceId: currentCamera } },
 });
 
-// const capturedImage = ref("");
 
-const takePicture = () => {
+const takePicture = async () => {
+   const storage = getStorage();
    const canvas = document.createElement("canvas");
    canvas.width = video.value.videoWidth;
    canvas.height = video.value.videoHeight;
 
    const context = canvas.getContext("2d");
    context.drawImage(video.value, 0, 0, canvas.width, canvas.height);
+   const dataUrl = canvas.toDataURL('image/png');
+   const blob =await fetch(dataUrl).then(res => res.blob());
+   const filename = `canvas_image_${Date.now()}.png`;
 
-   // uploadImage(canvas)
-   previewImage.value = canvas.toDataURL("image/png");
-
-   canvas.toBlob((b) => { 
-    blob = b;
-  });
-   
-   isHaveImage.value = true;
+    
+      const storageRef2 = storageRef(storage, 'images/' + filename);
+      await  uploadBytes(storageRef2, blob);
+      console.log('aaa',storageRef2)
+      const url = await getDownloadURL(storageRef2);
+      console.log('aaa',url)
+      previewImage.value = url;
+      isHaveImage.value = true;
 };
 
 
@@ -278,7 +263,6 @@ var isEdit = false;
 var titleInput = ref("");
 var descriptionInput = ref("");
 var editDataId = ref("");
-var blob;
 var previewImage = ref(null);
 
 const dbName = "IndexDBAxe";
@@ -290,14 +274,21 @@ let isHaveImage = ref(false);
 let isOpenCamera = ref(false);
 
 const onFileUploaded = (event) => {
-  blob = new Blob([event.target.files[0]]);
+   const imageUploaded=event.target.files[0]
+   const storage = getStorage();
+   const storageRef2 = storageRef(storage, 'images/' + imageUploaded.name);
+        // Upload the file
+   uploadBytes(storageRef2, imageUploaded);
+   console.log('aaa',storageRef2)
+   const url = getDownloadURL(storageRef2);
+   url.then(res=>{
+      previewImage.value = res;
+      isHaveImage.value = true;
+      console.log('Image URLres:', res);
+   })
+//   blob = new Blob([event.target.files[0]]);
 //   uploadImage(event.target.files[0])
-  previewImage.value = URL.createObjectURL(blob);
-  isHaveImage.value = true;
-};
-
-const convertURLToBlob = (event) => {
-
+//   previewImage.value = URL.createObjectURL(blob);
 };
 
 function handleOpenCamera() {
@@ -341,7 +332,7 @@ async function addData() {
 
       receipeCount.onsuccess = function (e) {
          const recordCount = e.target.result;
-         const receipeToAdd = { id: ( recordCount+1), title: titleInput.value, description: descriptionInput.value, image: blob };
+         const receipeToAdd = { id: ( recordCount+1), title: titleInput.value, description: descriptionInput.value, image: previewImage.value };
 
         const addRequest = receipeObjectStore.add(receipeToAdd);
 
@@ -419,14 +410,12 @@ function changeToAddUser() {
    isEdit = false;
    titleInput.value = "";
    descriptionInput.value = "";
-   blob = null;
    previewImage.value = "";
    isModalAdd.value = true;
    isHaveImage.value = false;
 }
 
 function resetImage() {
-   blob = null;
    previewImage.value = "";
    isHaveImage.value = false;
    isOpenCamera.value = false;
@@ -441,8 +430,7 @@ async function updateDataChanges(event) {
    titleInput.value = event.title;
    descriptionInput.value = event.description;
    if (event.image != null) {
-      blob = event.image;
-      previewImage.value = URL.createObjectURL(blob);
+      previewImage.value = event.image;
       isHaveImage.value = true;
    } else {
       isHaveImage.value = false;
@@ -455,7 +443,7 @@ async function updateDataChanges(event) {
 async function updateDataSubmit() {
   if(confirm('Are you sure want to update data?')){
     const request = indexedDB.open(dbName, 2);
-    const updatedreceipeData = { id: editDataId.value, title: titleInput.value, description: descriptionInput.value, image: blob };
+    const updatedreceipeData = { id: editDataId.value, title: titleInput.value, description: descriptionInput.value, image: previewImage.value };
 
     request.onerror = (event) => {
       console.error("Error opening database:", event.target.error);
