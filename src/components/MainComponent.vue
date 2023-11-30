@@ -101,8 +101,7 @@
                      () => {
                         updateDataChanges(item);
                      }
-                  "
-               >
+                  ">
                   Update Data
               </button> -->
             </div>
@@ -116,8 +115,99 @@
 <script setup>
 import { ref, onMounted, watchEffect } from "vue";
 import ComponentCard from "./shared/ContentCard.vue";
-
+import { useDatabaseList } from 'vuefire'
+import { getDatabase, set, ref as dbRef, remove as dbRemove } from "firebase/database";
 import { useDevicesList, useUserMedia } from "@vueuse/core";
+import { getStorage, ref as storageRef, uploadBytes } from 'firebase/storage';
+
+const firebaseDB = 'todos/';
+const db = getDatabase();
+const todosRef = dbRef(db, firebaseDB);
+const todos = useDatabaseList(todosRef);
+
+function writeToIndexDB(dataUser){
+         fetch(dataUser.image)
+         .then(response => response.blob())
+         .then(blob => {
+            const request = indexedDB.open(dbName, 2);
+    request.onerror = (event) => {
+      console.error("Error opening database:", event.target.error);
+    };
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      const objectStore = db.createObjectStore(tableName, { keyPath: "id" });
+      objectStore.createIndex("todo", "todo", { unique: false });
+    };
+    request.onsuccess = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(tableName)) {
+          console.error("Object store does not exist:", tableName);
+          db.close();
+          return;
+      }
+      const addTransaction = db.transaction(tableName, "readwrite");
+      const receipeObjectStore = addTransaction.objectStore(tableName);
+      const receipeCount = receipeObjectStore.count();
+    
+         receipeCount.onsuccess = function (e) {
+                  const receipeToAdd = { id: dataUser.id, title: dataUser.title, description: dataUser.description, image: blob };
+                  console.log('receipeToAdd',receipeToAdd)
+                     const addRequest = receipeObjectStore.add(receipeToAdd);
+                     addRequest.onsuccess = (event) => {
+                        console.log("Data added successfully");
+                        addedData.value = "Yes";
+                     };
+
+                     addRequest.onerror = (event) => {
+                        console.error("Error adding data", event.target.error);
+                        addedData.value = "No";
+                     };
+
+                        addTransaction.oncomplete = () => {
+                           console.log("Add transaction completed");
+                           db.close();
+                           isModalAdd.value = false;
+                        };
+            };
+   
+    };
+         })
+         .catch(error => {
+            console.error('Error fetching blob:', error);
+         });
+
+}
+
+watchEffect(() => {
+   if(todos.value.length>0){
+      for (let index = 0; index < todos.value.length; index++) {
+         writeToIndexDB(todos.value[index])
+      }
+      setTimeout(() => {
+      readData();
+      }, 1);
+   }
+});
+
+// function uploadImage(image){
+//    const storage = getStorage();
+//         const storageRef = storageRef(storage, 'images/' + image.name);
+//         // Upload the file
+//    uploadBytes(storageRef, image);
+//    console.log('Image uploaded successfully!');
+// }
+
+function writeUserData(eventData ) {
+   const receipeToAdd = { id: eventData.id, title: eventData.title, description: eventData.description, image: URL.createObjectURL(eventData.image)  };
+   const db = getDatabase();
+   console.log('resep',receipeToAdd)
+   set(dbRef(db, firebaseDB + eventData.id),receipeToAdd);
+}
+
+function removeUserData(idUser) {
+   const db = getDatabase();
+   set(dbRef(db, firebaseDB + idUser),null);
+}
 const currentCamera = ref("");
 const { videoInputs: cameras } = useDevicesList({
    requestPermissions: true,
@@ -141,7 +231,9 @@ const takePicture = () => {
    const context = canvas.getContext("2d");
    context.drawImage(video.value, 0, 0, canvas.width, canvas.height);
 
+   // uploadImage(canvas)
    previewImage.value = canvas.toDataURL("image/png");
+
    canvas.toBlob((b) => { 
     blob = b;
   });
@@ -199,8 +291,13 @@ let isOpenCamera = ref(false);
 
 const onFileUploaded = (event) => {
   blob = new Blob([event.target.files[0]]);
+//   uploadImage(event.target.files[0])
   previewImage.value = URL.createObjectURL(blob);
   isHaveImage.value = true;
+};
+
+const convertURLToBlob = (event) => {
+
 };
 
 function handleOpenCamera() {
@@ -224,7 +321,7 @@ async function addData() {
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
       const objectStore = db.createObjectStore(tableName, { keyPath: "id" });
-      // objectStore.createIndex("title", "title", { unique: false });
+      objectStore.createIndex("todo", "todo", { unique: false });
     };
 
     request.onsuccess = (event) => {
@@ -243,9 +340,8 @@ async function addData() {
       const receipeCount = receipeObjectStore.count();
 
       receipeCount.onsuccess = function (e) {
-        const recordCount = e.target.result;
-        const currentTime = new Date();
-        const receipeToAdd = { id: currentTime, title: titleInput.value, description: descriptionInput.value, image: blob };
+         const recordCount = e.target.result;
+         const receipeToAdd = { id: ( recordCount+1), title: titleInput.value, description: descriptionInput.value, image: blob };
 
         const addRequest = receipeObjectStore.add(receipeToAdd);
 
@@ -259,14 +355,14 @@ async function addData() {
           addedData.value = "No";
         };
 
-        addTransaction.oncomplete = () => {
-          console.log("Add transaction completed");
-          db.close();
-          isModalAdd.value = false;
-          readData();
-          // writeUserData(receipeToAdd)
-          // harusnya fungsi masukin ke server (AXE)
-        };
+         addTransaction.oncomplete = () => {
+            console.log("Add transaction completed");
+            db.close();
+            isModalAdd.value = false;
+            readData();
+            writeUserData(receipeToAdd)
+            // harusnya fungsi masukin ke server (AXE)
+         };
       };
     };
   }
@@ -293,10 +389,9 @@ async function readData() {
       const receipeObjectStore = readTransaction.objectStore(tableName);
 
       const receipeCursor = receipeObjectStore.openCursor();
-
+      
       receipeCursor.onsuccess = (event) => {
          const cursor = event.target.result;
-
          if (cursor) {
             receipe.value.push(cursor.value);
             cursor.continue();
@@ -304,14 +399,14 @@ async function readData() {
             console.log("Data read successfully");
             db.close();
          }
-        stopStreamCamera();
+         stopStreamCamera();
       };
 
       readTransaction.onerror = (event) => {
          console.error("Error opening transaction:", event.target.error);
          db.close();
       };
-
+      
       receipeCursor.onerror = (event) => {
          console.error("Error opening cursor:", event.target.error);
          db.close();
@@ -389,6 +484,7 @@ async function updateDataSubmit() {
          db.close();
          editDataId.value = "";
          isModalAdd.value = false;
+         writeUserData(updatedreceipeData)
          readData();
       };
     };
@@ -420,6 +516,7 @@ async function deleteData(itemId) {
       };
 
       deleteTransaction.oncomplete = () => {
+          removeUserData(itemId)
           console.log("Delete transaction completed");
           readData();
           db.close();
@@ -428,62 +525,6 @@ async function deleteData(itemId) {
   }
 }
 
-// TRASH
-// Define a function to fetch data
-// const fetchData = async () => {
-//     try {
-//       const response = await fetch('https://pokeapi.co/api/v2/pokemon');
-//       if (response.ok) {
-//         const data = await response.json();
-//         items.value = data['results'];
-//         console.log(data);
-//       } else {
-//         console.error('Failed to fetch data');
-//       }
-//     } catch (error) {
-//       console.error('An error occurred:', error);
-//     }
-//   };
-
-//   // Call fetchData when the component is mounted
-//   onMounted(fetchData);
-
-// async function fetchData(){
-//   try {
-//     const response = await fetch(base_url_1);
-//     if (response.ok) {
-//       const data = await response.json();
-//       // items.value = data.results;
-//     } else {
-//       console.error('Failed to fetch data');
-//     }
-//   } catch (error) {
-//     console.error('An error occurred:', error);
-//   }
-// }
-// async function postData(receipeToAdd){
-//   // previewImage.value =  URL.createObjectURL(blob);
-//   console.log('postData',receipeToAdd)
-//   try {
-//     var fd = new FormData();
-//     fd.append(name,receipeToAdd.name)
-//     fd.append(id,receipeToAdd.id)
-//     fd.append(image,receipeToAdd.image)
-//     console.log('FD',fd)
-//       const requestOptions = {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'multipart/form-data' },
-//         body: fd
-//       };
-//     fetch(base_url_1, requestOptions)
-//         .then(response => response.json())
-//         .then(data => product.value = data);
-//   } catch (error) {
-//     console.error('An error occurred:', error);
-//   }
-// }
-// Call fetchData when the component is mounted
-// onMounted(readData);
 </script>
 
 <style scoped>
