@@ -1,40 +1,33 @@
 <template>
    <div style="padding: 15px 20px">
       <div class="header-class">
-         <span class="header-title">Receipe</span>
+         <span class="header-title">Chawanmushi Recipe 茶碗蒸し</span>
 
-         <v-dialog v-model="isModalAdd" width="auto">
+         <v-dialog v-model="isModalAdd" width="1024">
             <v-card>
                <v-card-text>
                   <v-row no-gutters>
-                     <!-- <v-col sm="12" md="3" lg="4">
-                        <v-sheet class="pa-2 ma-2">
-                           <span class="header-title">Title</span>
-                        </v-sheet>
-                     </v-col>
-                     <v-col sm="12" md="9" lg="8">
-                        <v-sheet class="pa-2 ma-2"> <input class="input-style" v-model="titleInput" placeholder="Title" /><br /> </v-sheet>
-                     </v-col> -->
-
-                     <span style="margin-top: 20px" class="header-title">Title</span>
-                     <input style="margin-top: 10px" class="input-style" v-model="titleInput" placeholder="Title" />
+                    <v-col cols="12">
+                      <v-text-field 
+                        label="Title *" 
+                        required 
+                        v-model="titleInput" 
+                        placeholder="What is Chawanmushi ?">
+                      </v-text-field>
+                    </v-col>
+                     <!-- <span style="margin-top: 20px" class="header-title">Title</span>
+                     <input style="margin-top: 10px" class="input-style"  placeholder="Title" /> -->
                   </v-row>
-
                   <v-row no-gutters>
-                     <!-- <v-col sm="12" md="3" lg="4">
-                        <v-sheet class="pa-2 ma-2">
-                           <span class="header-title">Description</span>
-                        </v-sheet>
-                     </v-col>
-                     <v-col sm="12" md="9" lg="8">
-                        <textarea name="" id="" cols="30" rows="4" class="input-style" placeholder="Description" v-model="descriptionInput"></textarea>
-                        <v-textarea variant="filled" class="input-style" auto-grow label="Four rows" rows="4" row-height="30" shaped v-model="descriptionInput"></v-textarea>
-
-                        <v-sheet class="pa-2 ma-2"> <input class="input-style" v-model="descriptionInput" placeholder="Description" /><br /> </v-sheet>
-                     </v-col> -->
-
-                     <span style="margin-top: 20px" class="header-title">Description</span>
-                     <textarea style="margin-top: 10px" name="" id="" cols="30" rows="4" class="input-style" placeholder="Description" v-model="descriptionInput"></textarea>
+                    <v-col cols="12">
+                      <v-textarea
+                        label="Description" 
+                        v-model="descriptionInput" 
+                        placeholder="Chawanmushi is a classic Japanese savory custard that's steamed in a delicate cup.">
+                      </v-textarea>
+                    </v-col>
+                     <!-- <span style="margin-top: 20px" class="header-title">Description</span>
+                     <textarea style="margin-top: 10px" name="" id="" cols="30" rows="4" class="input-style" placeholder="Description" v-model="descriptionInput"></textarea> -->
                   </v-row>
 
                   <div style="margin-top: 20px" v-if="!isHaveImage">
@@ -43,15 +36,18 @@
 
                      <div v-if="isOpenCamera">
                         <div style="margin-top: 10px">
-                           <video ref="video" muted autoplay controls class="h-100 w-auto" />
-                           <div v-if="capturedImage">
-                              <img :src="capturedImage" alt="Captured" />
-                           </div>
-                           <button @click="enabled = !enabled">
-                              {{ enabled ? "Stop" : "Start" }}
-                           </button>
-                           <button @click="takePicture" :disabled="!enabled">Take Picture</button>
-                           <button @click="handleCloseCamera">Cancel</button>
+                          <video v-if="enabled" ref="video" muted autoplay :width="1024" :height="768"></video>
+                          <!-- <div v-if="capturedImage">
+                            <img :src="capturedImage" alt="Captured" />
+                          </div> -->
+                          <div class="button-box">
+                            <v-btn @click="enabled = !enabled">
+                                {{ enabled ? "Stop Camera" : "Start Camera" }}
+                            </v-btn>
+                            <v-btn v-if="enabled" icon="fa-solid fa-camera" @click="takePicture" :disabled="!enabled"></v-btn>
+                            <!-- <button @click="takePicture" :disabled="!enabled">Take Picture</button> -->
+                            <button @click="handleCloseCamera">Cancel</button>
+                          </div>
                         </div>
                      </div>
 
@@ -59,11 +55,11 @@
                         <div style="margin-top: 10px">
                            <v-menu transition="slide-y-transition" style="width: 100%; margin-top: 10px">
                               <template v-slot:activator="{ props }">
-                                 <v-btn class="button-dialog" v-bind="props"> Input file </v-btn>
+                                 <v-btn class="button-dialog" v-bind="props"> Choose File Methods </v-btn>
                               </template>
                               <v-list>
-                                 <button style="width: 100%" @click="handleOpenCamera">Open Camera</button>
-                                 <v-file-input label="File input" capture="user" type="file" v-on:change="onFileUploaded" accept="image/*"></v-file-input>
+                                 <button style="width: 100%" @click="handleOpenCamera">Take a photo</button>
+                                 <v-file-input id="file-input" label="Upload from Gallery" capture="user" type="file" v-on:change="onFileUploaded" accept="image/*"></v-file-input>
                               </v-list>
                            </v-menu>
                         </div>
@@ -75,15 +71,14 @@
                      <br />
 
                      <div style="margin-top: 10px">
-                        <img :src="previewImage" style="width: 100px; height: auto" />
-
-                        <button @click="resetImage">edit</button>
+                        <img :src="previewImage" :width="1024" :height="768" />
+                        <v-btn prepend-icon="fa-solid fa-rotate-left" @click="resetImage">Re-Upload File</v-btn>
+                        <!-- <button @click="resetImage">Re-Upload</button> -->
                      </div>
                   </div>
 
                   <div style="margin-top: 20px">
                      <v-btn class="button-dialog" style="width: 100%" v-if="isEdit" variant="tonal" text="Edit Data" v-bind:disabled="titleInput == ''" @click="updateDataSubmit"></v-btn>
-
                      <v-btn class="button-dialog" style="width: 100%" v-if="!isEdit" variant="tonal" text="Submit Data" v-bind:disabled="titleInput == ''" @click="addData"></v-btn>
                   </div>
                </v-card-text>
@@ -97,8 +92,10 @@
          <div class="view-data-container">
             <ComponentCard :imageUrl="item.image" :item="item" />
             <div>
-               <button style="margin-right: 10px" v-on:click="deleteData(item.id)">Delete Data</button>
-               <button
+              <v-btn icon="fa-solid fa-trash" @click="deleteData(item.id)"></v-btn>
+              <!-- <button style="margin-right: 10px" v-on:click="deleteData(item.id)">Delete Data</button> -->
+              <v-btn icon="fa-solid fa-pencil" @click="updateDataChanges(item)"></v-btn>
+              <!-- <button
                   style="margin-right: 10px"
                   v-on:click="
                      () => {
@@ -107,12 +104,12 @@
                   "
                >
                   Update Data
-               </button>
+              </button> -->
             </div>
          </div>
       </div>
 
-      <div v-if="!receipe.length" class="view-data-container">Tidak Ada Data (T_T)</div>
+      <div v-if="!receipe.length" class="view-data-container">No Data Available</div>
    </div>
 </template>
 
@@ -134,7 +131,7 @@ const { stream, enabled } = useUserMedia({
    constraints: { video: { deviceId: currentCamera } },
 });
 
-const capturedImage = ref("");
+// const capturedImage = ref("");
 
 const takePicture = () => {
    const canvas = document.createElement("canvas");
@@ -144,14 +141,26 @@ const takePicture = () => {
    const context = canvas.getContext("2d");
    context.drawImage(video.value, 0, 0, canvas.width, canvas.height);
 
-   capturedImage.value = canvas.toDataURL("image/png");
-
+   previewImage.value = canvas.toDataURL("image/png");
+   canvas.toBlob((b) => { 
+    blob = b;
+  });
+   
    isHaveImage.value = true;
 };
+
+
+function stopStreamCamera() {
+  enabled.value = false;
+}
 
 watchEffect(() => {
    if (video.value) video.value.srcObject = stream.value;
 });
+
+onMounted(() => {
+  readData();
+})
 
 // Create Broadcast Channel and listen to messages sent to it
 const broadcast = new BroadcastChannel("sw-update-channel");
@@ -200,6 +209,7 @@ function handleOpenCamera() {
 
 function handleCloseCamera() {
    isOpenCamera.value = false;
+   stopStreamCamera();
 }
 
 // SUBMIT DATA
@@ -292,6 +302,7 @@ async function readData() {
             console.log("Data read successfully");
             db.close();
          }
+        stopStreamCamera();
       };
 
       readTransaction.onerror = (event) => {
@@ -322,6 +333,7 @@ function resetImage() {
    previewImage.value = "";
    isHaveImage.value = false;
    isOpenCamera.value = false;
+   stopStreamCamera();
 }
 
 async function updateDataChanges(event) {
@@ -544,4 +556,21 @@ async function deleteData(itemId) {
    padding: 20px 10px;
    border-bottom: 5px solid gray;
 }
+
+video,
+img {
+  height: auto;
+  width: 100%;
+}
+
+.button-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#file-input {
+  text-align: center;
+}
+
 </style>

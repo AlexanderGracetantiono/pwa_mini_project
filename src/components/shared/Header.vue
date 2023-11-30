@@ -3,7 +3,7 @@
 
 <template>
   <div class="header-class">
-    <span class="header-title">Learn Vue JS V3</span>
+    <span class="header-title">Make your own Recipe <v-icon icon="fa-solid fa-book" size="larger"></v-icon></span>
   </div>
 </template>
 
@@ -20,7 +20,7 @@
 }
 .header-title{
   color: white;
-  font-size: 26px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 400;
 }
 </style>
