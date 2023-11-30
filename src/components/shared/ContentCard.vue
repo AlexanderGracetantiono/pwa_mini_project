@@ -2,6 +2,7 @@
 defineProps({
    item: Object,
    imageUrl: String,
+   idx: String,
 });
 
 const blobToImageUrl = (event) => {
@@ -10,30 +11,36 @@ const blobToImageUrl = (event) => {
 </script>
 
 <template>
-   <div class="card-container">
-      <div v-if="imageUrl !== null">
-         <img :src="blobToImageUrl(imageUrl)" style="width: 100px; height: auto" />
-      </div>
-      <span class="title-case-style">{{ item.id }}</span>
-      <span class="title-case-style">{{ item.title }}</span>
-      <p class="title-case-style" v-html="item.description"></p>
-   </div>
+   <v-container>
+      <v-row>
+         <v-col cols="12">
+            <p class="title">{{idx}}. {{ item.title }}</p>
+         </v-col>
+      </v-row>
+      <v-row>
+         <v-col cols="12">
+            <p v-html="item.description"></p>
+         </v-col>
+      </v-row>
+      <v-row>
+         <v-col cols="12">
+            <img :src="blobToImageUrl(imageUrl)" style="width: 100px; height: auto" />
+         </v-col>
+      </v-row>
+   </v-container>
 </template>
 
 <style scoped>
-.card-container {
-   display: flex;
-   align-items: center;
-}
-.title-case-style {
-   font-size: 18px;
-   color: black;
-   margin-left: 10px;
-}
-/* .card-container:hover{
-  background-color: wheat;
+.v-container {
     display: flex;
-    align-items: center;
-    padding: 10px 20px;
-}  */
+    flex-direction: column;
+    align-items: start;
+    text-align: justify;
+    word-break: break-word;
+}
+
+.title {
+   font-weight: bold;
+}
+
 </style>
