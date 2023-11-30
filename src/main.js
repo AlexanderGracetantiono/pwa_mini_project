@@ -5,7 +5,9 @@ import { registerSW } from 'virtual:pwa-register'
 import { VueFire, VueFireAuth } from 'vuefire'
 // Vuetify
 import 'vuetify/styles'
+import 'font-awesome/css/font-awesome.min.css'
 import { createVuetify } from 'vuetify'
+import { aliases, fa } from 'vuetify/iconsets/fa4'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 
@@ -17,6 +19,13 @@ import {
 const vuetify = createVuetify({
   components,
   directives,
+  icons: {
+    defaultSet: 'fa',
+    aliases,
+    sets: {
+      fa,
+    },
+  },
 })
 
 const intervalMS = 3
