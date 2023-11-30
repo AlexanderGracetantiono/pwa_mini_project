@@ -78,23 +78,23 @@
                   </div>
 
                   <div style="margin-top: 20px">
-                     <v-btn class="button-dialog" style="width: 100%" v-if="isEdit" variant="tonal" text="Edit Data" v-bind:disabled="titleInput == ''" @click="updateDataSubmit"></v-btn>
-                     <v-btn class="button-dialog" style="width: 100%" v-if="!isEdit" variant="tonal" text="Submit Data" v-bind:disabled="titleInput == ''" @click="addData"></v-btn>
+                     <v-btn class="button-dialog" style="width: 100%" v-if="isEdit" variant="elevated" color="secondary" v-bind:disabled="titleInput == ''" @click="updateDataSubmit">Update</v-btn>
+                     <v-btn class="button-dialog" style="width: 100%" v-if="!isEdit" variant="elevated" color="secondary" v-bind:disabled="titleInput == ''" @click="addData">Submit</v-btn>
                   </div>
                </v-card-text>
             </v-card>
          </v-dialog>
 
-         <v-btn color="primary" @click="changeToAddUser"> Add Step </v-btn>
+         <v-btn color="primary" size="small" @click="changeToAddUser"> Add Step </v-btn>
       </div>
 
-      <div v-for="item in receipe" :key="item.id">
+      <div v-for="item,index in receipe" :key="item.id">
          <div class="view-data-container">
-            <ComponentCard :imageUrl="item.image" :item="item" />
+            <ComponentCard :imageUrl="item.image" :item="item" :idx="index+1"/>
             <div>
-              <v-btn icon="fa-solid fa-trash" @click="deleteData(item.id)"></v-btn>
+              <v-btn icon="fa-solid fa-trash" size="small" @click="deleteData(item.id)"></v-btn>
               <!-- <button style="margin-right: 10px" v-on:click="deleteData(item.id)">Delete Data</button> -->
-              <v-btn icon="fa-solid fa-pencil" @click="updateDataChanges(item)"></v-btn>
+              <v-btn icon="fa-solid fa-pencil" size="small" @click="updateDataChanges(item)"></v-btn>
               <!-- <button
                   style="margin-right: 10px"
                   v-on:click="
@@ -198,42 +198,43 @@ let isHaveImage = ref(false);
 let isOpenCamera = ref(false);
 
 const onFileUploaded = (event) => {
-   blob = new Blob([event.target.files[0]]);
-   previewImage.value = URL.createObjectURL(blob);
-   isHaveImage.value = true;
+  blob = new Blob([event.target.files[0]]);
+  previewImage.value = URL.createObjectURL(blob);
+  isHaveImage.value = true;
 };
 
 function handleOpenCamera() {
-   isOpenCamera.value = true;
+  isOpenCamera.value = true;
 }
 
 function handleCloseCamera() {
-   isOpenCamera.value = false;
-   stopStreamCamera();
+  isOpenCamera.value = false;
+  stopStreamCamera();
 }
 
 // SUBMIT DATA
 async function addData() {
-   const request = indexedDB.open(dbName, 2);
+  if(confirm('Are you sure want to add data ?')){
+    const request = indexedDB.open(dbName, 2);
 
-   request.onerror = (event) => {
+    request.onerror = (event) => {
       console.error("Error opening database:", event.target.error);
-   };
+    };
 
-   request.onupgradeneeded = (event) => {
+    request.onupgradeneeded = (event) => {
       const db = event.target.result;
       const objectStore = db.createObjectStore(tableName, { keyPath: "id" });
       // objectStore.createIndex("title", "title", { unique: false });
-   };
+    };
 
-   request.onsuccess = (event) => {
+    request.onsuccess = (event) => {
       const db = event.target.result;
 
       // Check if the object store exists
       if (!db.objectStoreNames.contains(tableName)) {
-         console.error("Object store does not exist:", tableName);
-         db.close();
-         return;
+          console.error("Object store does not exist:", tableName);
+          db.close();
+          return;
       }
 
       const addTransaction = db.transaction(tableName, "readwrite");
@@ -242,32 +243,33 @@ async function addData() {
       const receipeCount = receipeObjectStore.count();
 
       receipeCount.onsuccess = function (e) {
-         const recordCount = e.target.result;
-         const currentTime = new Date();
-         const receipeToAdd = { id: currentTime, title: titleInput.value, description: descriptionInput.value, image: blob };
+        const recordCount = e.target.result;
+        const currentTime = new Date();
+        const receipeToAdd = { id: currentTime, title: titleInput.value, description: descriptionInput.value, image: blob };
 
-         const addRequest = receipeObjectStore.add(receipeToAdd);
+        const addRequest = receipeObjectStore.add(receipeToAdd);
 
-         addRequest.onsuccess = (event) => {
-            console.log("Data added successfully");
-            addedData.value = "Yes";
-         };
+        addRequest.onsuccess = (event) => {
+          console.log("Data added successfully");
+          addedData.value = "Yes";
+        };
 
-         addRequest.onerror = (event) => {
-            console.error("Error adding data", event.target.error);
-            addedData.value = "No";
-         };
+        addRequest.onerror = (event) => {
+          console.error("Error adding data", event.target.error);
+          addedData.value = "No";
+        };
 
-         addTransaction.oncomplete = () => {
-            console.log("Add transaction completed");
-            db.close();
-            isModalAdd.value = false;
-            readData();
-            // writeUserData(receipeToAdd)
-            // harusnya fungsi masukin ke server (AXE)
-         };
+        addTransaction.oncomplete = () => {
+          console.log("Add transaction completed");
+          db.close();
+          isModalAdd.value = false;
+          readData();
+          // writeUserData(receipeToAdd)
+          // harusnya fungsi masukin ke server (AXE)
+        };
       };
-   };
+    };
+  }
 }
 
 // VIEW DATA
@@ -356,14 +358,15 @@ async function updateDataChanges(event) {
 }
 
 async function updateDataSubmit() {
-   const request = indexedDB.open(dbName, 2);
-   const updatedreceipeData = { id: editDataId.value, title: titleInput.value, description: descriptionInput.value, image: blob };
+  if(confirm('Are you sure want to update data?')){
+    const request = indexedDB.open(dbName, 2);
+    const updatedreceipeData = { id: editDataId.value, title: titleInput.value, description: descriptionInput.value, image: blob };
 
-   request.onerror = (event) => {
+    request.onerror = (event) => {
       console.error("Error opening database:", event.target.error);
-   };
-
-   request.onsuccess = (event) => {
+    };
+    
+    request.onsuccess = (event) => {
       const db = event.target.result;
 
       const updateTransaction = db.transaction(tableName, "readwrite");
@@ -388,17 +391,19 @@ async function updateDataSubmit() {
          isModalAdd.value = false;
          readData();
       };
-   };
+    };
+  }
 }
 
 async function deleteData(itemId) {
-   const request = indexedDB.open(dbName, 2);
+  if(confirm('Are you sure want to delete data ?')){
+    const request = indexedDB.open(dbName, 2);
 
-   request.onerror = (event) => {
+    request.onerror = (event) => {
       console.error("Error opening database:", event.target.error);
-   };
+    };
 
-   request.onsuccess = (event) => {
+    request.onsuccess = (event) => {
       const db = event.target.result;
 
       const deleteTransaction = db.transaction(tableName, "readwrite");
@@ -407,19 +412,20 @@ async function deleteData(itemId) {
       const deleteRequest = deleteObjectStore.delete(itemId);
 
       deleteRequest.onsuccess = (event) => {
-         console.log("Data deleted successfully");
+          console.log("Data deleted successfully");
       };
 
       deleteRequest.onerror = (event) => {
-         console.error("Error deleting data", event.target.error);
+          console.error("Error deleting data", event.target.error);
       };
 
       deleteTransaction.oncomplete = () => {
-         console.log("Delete transaction completed");
-         readData();
-         db.close();
+          console.log("Delete transaction completed");
+          readData();
+          db.close();
       };
-   };
+    };
+  }
 }
 
 // TRASH
@@ -535,8 +541,8 @@ async function deleteData(itemId) {
 }
 .header-title {
    color: black;
-   font-size: 18px;
    font-weight: 600;
+   word-break: keep-all;
 }
 .view-data-container {
    background-color: white;

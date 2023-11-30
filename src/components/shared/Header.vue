@@ -3,7 +3,7 @@
 
 <template>
   <div class="header-class">
-    <span class="header-title">Make your own Recipe <v-icon icon="fa-solid fa-book" size="larger"></v-icon></span>
+    <span class="header-main">Make your own Recipe <v-icon icon="fa-solid fa-book" size="larger"></v-icon></span>
   </div>
 </template>
 
@@ -18,9 +18,8 @@
   align-items: center;
   padding: 20px 10px;
 }
-.header-title{
+.header-main{
   color: white;
-  font-size: 22px;
-  font-weight: 400;
+  font-weight: 600;
 }
 </style>

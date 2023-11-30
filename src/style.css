@@ -62,6 +62,11 @@ button {
    cursor: pointer;
    transition: border-color 0.25s;
 }
+
+.v-btn {
+   margin: 4px;
+}
+
 button:hover {
    border-color: #646cff;
 }
@@ -93,3 +98,39 @@ button:focus-visible {
       background-color: #f9f9f9;
    }
 }
+
+@media (max-width: 599px) {
+   p {
+     font-size: smaller;
+   }
+   .header-title {
+      font-size: small;
+   }
+   .header-main {
+      font-size: medium;
+   }
+ }
+ 
+ @media (min-width: 600px) and (max-width: 959px) {
+   p {
+     font-size: small;
+   }
+   .header-title {
+      font-size: medium;
+   }
+   .header-main {
+      font-size: large;
+   }
+ }
+
+ @media (min-width: 960px) {
+   p {
+      font-size: medium;
+   }
+   .header-title {
+      font-size: large;
+   }
+   .header-main {
+      font-size: larger;
+   }
+ }
