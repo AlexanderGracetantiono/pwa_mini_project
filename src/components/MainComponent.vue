@@ -116,55 +116,38 @@ const todosRef = dbRef(db, firebaseDB);
 const todos = useDatabaseList(todosRef);
 
 function writeToIndexDB(dataUser){
-         // fetch(dataUser.image)
-         // .then(response => response.blob())
-         // .then(blob => {
-            const request = indexedDB.open(dbName, 2);
+   const request = indexedDB.open(dbName, 2);
+    const updatedreceipeData = { id: dataUser.id, title: dataUser.title, description: dataUser.description, image: dataUser.image };
+
     request.onerror = (event) => {
       console.error("Error opening database:", event.target.error);
     };
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      const objectStore = db.createObjectStore(tableName, { keyPath: "id" });
-      objectStore.createIndex("todo", "todo", { unique: false });
-    };
+    
     request.onsuccess = (event) => {
       const db = event.target.result;
-      if (!db.objectStoreNames.contains(tableName)) {
-          console.error("Object store does not exist:", tableName);
-          db.close();
-          return;
-      }
-      const addTransaction = db.transaction(tableName, "readwrite");
-      const receipeObjectStore = addTransaction.objectStore(tableName);
-      const receipeCount = receipeObjectStore.count();
-    
-         receipeCount.onsuccess = function (e) {
-                  const receipeToAdd = { id: dataUser.id, title: dataUser.title, description: dataUser.description, image: dataUser.image };
-                  console.log('receipeToAdd',receipeToAdd)
-                     const addRequest = receipeObjectStore.add(receipeToAdd);
-                     addRequest.onsuccess = (event) => {
-                        console.log("Data added successfully");
-                        addedData.value = "Yes";
-                     };
 
-                     addRequest.onerror = (event) => {
-                        console.error("Error adding data", event.target.error);
-                        addedData.value = "No";
-                     };
+      const updateTransaction = db.transaction(tableName, "readwrite");
+      const receipeObjectStore = updateTransaction.objectStore(tableName);
 
-                        addTransaction.oncomplete = () => {
-                           console.log("Add transaction completed");
-                           db.close();
-                           isModalAdd.value = false;
-                        };
-            };
-   
+      const updateRequest = receipeObjectStore.put(updatedreceipeData);
+
+      updateRequest.onsuccess = (event) => {
+         console.log("Data updated successfully");
+         updatedData.value = "Yes";
+      };
+
+      updateRequest.onerror = (event) => {
+         console.error("Error updating data", event.target.error);
+         updatedData.value = "No";
+      };
+
+      updateTransaction.oncomplete = () => {
+         console.log("Update transaction completed");
+         db.close();
+         editDataId.value = "";
+         isModalAdd.value = false;
+      };
     };
-         // })
-         // .catch(error => {
-         //    console.error('Error fetching blob:', error);
-         // });
 
 }
 
@@ -173,9 +156,9 @@ watchEffect(() => {
       for (let index = 0; index < todos.value.length; index++) {
          writeToIndexDB(todos.value[index])
       }
-      setTimeout(() => {
-      readData();
-      }, 1);
+      // setTimeout(() => {
+      // readData();
+      // }, 1);
    }
 });
 
@@ -233,7 +216,9 @@ function stopStreamCamera() {
 
 watchEffect(() => {
    if (video.value) video.value.srcObject = stream.value;
-});
+})
+
+
 
 onMounted(() => {
   readData();
@@ -332,7 +317,8 @@ async function addData() {
 
       receipeCount.onsuccess = function (e) {
          const recordCount = e.target.result;
-         const receipeToAdd = { id: ( recordCount+1), title: titleInput.value, description: descriptionInput.value, image: previewImage.value };
+         const randomID = Date.now().toString();
+         const receipeToAdd = { id: randomID, title: titleInput.value, description: descriptionInput.value, image: previewImage.value };
 
         const addRequest = receipeObjectStore.add(receipeToAdd);
 
