@@ -17,12 +17,12 @@ const blobToImageUrl = (event) => {
             <p class="title">{{idx}}. {{ item.title }}</p>
          </v-col>
       </v-row>
-      <v-row>
+      <v-row v-if="item.description">
          <v-col cols="12">
             <p v-html="item.description"></p>
          </v-col>
       </v-row>
-      <v-row>
+      <v-row v-if="imageUrl">
          <v-col cols="12">
             <img :src="imageUrl" style="width: 100px; height: auto" />
          </v-col>

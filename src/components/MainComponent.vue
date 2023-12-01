@@ -158,9 +158,6 @@ watchEffect(() => {
       for (let index = 0; index < todos.value.length; index++) {
          writeToIndexDB(todos.value[index])
       }
-      // setTimeout(() => {
-      // readData();
-      // }, 1);
    }
 });
 
@@ -233,15 +230,11 @@ broadcast.onmessage = (event) => {
    if (event.data && event.data.type === "CRITICAL_SW_UPDATE") {
       // Show "update to refresh" banner to the user.
       const payload = event.data.payload;
-
       // Log the payload to the console
       console.log(payload);
       //show()
    }
 };
-// const base_url_1 = "https://my-json-server.typicode.com/AlexanderGracetantiono/json-server-sample/user"
-// const base_url_1 = "http://localhost:3000/user"
-// const base_url_1 = "https://pokeapi.co/api/v2/pokemon"
 // Define reactive variables
 const title = ref("Employee of the month");
 
@@ -264,7 +257,7 @@ const onFileUploaded = (event) => {
    const imageUploaded=event.target.files[0]
    const storage = getStorage();
    const storageRef2 = storageRef(storage, 'images/' + imageUploaded.name);
-        // Upload the file
+   // Upload the file
    uploadBytes(storageRef2, imageUploaded);
    console.log('aaa',storageRef2)
    const url = getDownloadURL(storageRef2);
@@ -273,9 +266,6 @@ const onFileUploaded = (event) => {
       isHaveImage.value = true;
       console.log('Image URLres:', res);
    })
-//   blob = new Blob([event.target.files[0]]);
-//   uploadImage(event.target.files[0])
-//   previewImage.value = URL.createObjectURL(blob);
 };
 
 function handleOpenCamera() {
@@ -563,13 +553,14 @@ async function deleteData(itemId) {
 }
 .view-data-container {
    background-color: white;
+   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
    display: flex;
    align-items: center;
    justify-content: space-between;
    padding: 10px 20px;
 }
 .view-data-container:hover {
-   background-color: #9ad0c2;
+   background-color: #ededed;
    display: flex;
    align-items: center;
    padding: 10px 20px;
