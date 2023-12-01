@@ -15,8 +15,6 @@
                         placeholder="What is Chawanmushi ?">
                       </v-text-field>
                     </v-col>
-                     <!-- <span style="margin-top: 20px" class="header-title">Title</span>
-                     <input style="margin-top: 10px" class="input-style"  placeholder="Title" /> -->
                   </v-row>
                   <v-row no-gutters>
                     <v-col cols="12">
@@ -26,8 +24,6 @@
                         placeholder="Chawanmushi is a classic Japanese savory custard that's steamed in a delicate cup.">
                       </v-textarea>
                     </v-col>
-                     <!-- <span style="margin-top: 20px" class="header-title">Description</span>
-                     <textarea style="margin-top: 10px" name="" id="" cols="30" rows="4" class="input-style" placeholder="Description" v-model="descriptionInput"></textarea> -->
                   </v-row>
 
                   <div style="margin-top: 20px" v-if="!isHaveImage">
@@ -37,15 +33,11 @@
                      <div v-if="isOpenCamera">
                         <div style="margin-top: 10px">
                           <video v-if="enabled" ref="video" muted autoplay :width="1024" :height="768"></video>
-                          <!-- <div v-if="capturedImage">
-                            <img :src="capturedImage" alt="Captured" />
-                          </div> -->
                           <div class="button-box">
                             <v-btn @click="enabled = !enabled">
                                 {{ enabled ? "Stop Camera" : "Start Camera" }}
                             </v-btn>
                             <v-btn v-if="enabled" icon="fa-solid fa-camera" @click="takePicture" :disabled="!enabled"></v-btn>
-                            <!-- <button @click="takePicture" :disabled="!enabled">Take Picture</button> -->
                             <button @click="handleCloseCamera">Cancel</button>
                           </div>
                         </div>
@@ -73,7 +65,6 @@
                      <div style="margin-top: 10px">
                         <img :src="previewImage" :width="1024" :height="768" />
                         <v-btn prepend-icon="fa-solid fa-rotate-left" @click="resetImage">Re-Upload File</v-btn>
-                        <!-- <button @click="resetImage">Re-Upload</button> -->
                      </div>
                   </div>
 
@@ -105,8 +96,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watchEffect } from "vue";
 import ComponentCard from "./shared/ContentCard.vue";
+import { ref, onMounted, watchEffect } from "vue";
 import { useDatabaseList } from 'vuefire'
 import { getDatabase, set, ref as dbRef, remove as dbRemove } from "firebase/database";
 import { useDevicesList, useUserMedia } from "@vueuse/core";
@@ -164,7 +155,6 @@ watchEffect(() => {
 function writeUserData(eventData ) {
    const receipeToAdd = { id: eventData.id, title: eventData.title, description: eventData.description, image: eventData.image  };
    const db = getDatabase();
-   console.log('resep',receipeToAdd)
    set(dbRef(db, firebaseDB + eventData.id),receipeToAdd);
 }
 
@@ -201,9 +191,7 @@ const takePicture = async () => {
     
       const storageRef2 = storageRef(storage, 'images/' + filename);
       await  uploadBytes(storageRef2, blob);
-      console.log('aaa',storageRef2)
       const url = await getDownloadURL(storageRef2);
-      console.log('aaa',url)
       previewImage.value = url;
       isHaveImage.value = true;
 };
@@ -382,7 +370,6 @@ async function readData() {
       };
    };
 }
-
 // Update DATA
 function changeToAddUser() {
    isEdit = false;
