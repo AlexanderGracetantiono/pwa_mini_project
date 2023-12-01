@@ -103,7 +103,7 @@ button:focus-visible {
    p {
      font-size: smaller;
    }
-   .header-title {
+   .header-title, .footer-title {
       font-size: small;
    }
    .header-main {
@@ -115,7 +115,7 @@ button:focus-visible {
    p {
      font-size: small;
    }
-   .header-title {
+   .header-title, .footer-title {
       font-size: medium;
    }
    .header-main {
@@ -127,7 +127,7 @@ button:focus-visible {
    p {
       font-size: medium;
    }
-   .header-title {
+   .header-title, .footer-title {
       font-size: large;
    }
    .header-main {

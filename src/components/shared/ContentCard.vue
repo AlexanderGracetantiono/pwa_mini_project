@@ -24,7 +24,7 @@ const blobToImageUrl = (event) => {
       </v-row>
       <v-row>
          <v-col cols="12">
-            <img :src="blobToImageUrl(imageUrl)" style="width: 100px; height: auto" />
+            <img :src="imageUrl" style="width: 100px; height: auto" />
          </v-col>
       </v-row>
    </v-container>

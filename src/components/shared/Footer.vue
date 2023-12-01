@@ -20,7 +20,6 @@
 }
 .footer-title{
   color: white;
-  font-size: 18px;
   font-weight: 600;
 }
 </style>
