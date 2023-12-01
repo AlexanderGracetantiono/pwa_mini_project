@@ -98,7 +98,9 @@
          </div>
       </div>
 
-      <div v-if="!receipe.length" class="view-data-container">No Data Available</div>
+      <div v-if="!receipe.length" class="view-data-container">
+         <p>No Data Available</p>
+      </div>
    </div>
 </template>
 
