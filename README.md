@@ -1,4 +1,6 @@
 # PWA Mini Project Tim 8
+You can access this project on
+https://axe-vue-appl.web.app/
 ## Installation  ##
 
 ```pnpm
